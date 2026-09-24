@@ -1,19 +1,14 @@
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-
-export type TimeType = "presence" | "voice";
+import type { Period } from "../utils/periods.js";
+import { getPeriodStartMs } from "../utils/periods.js";
 
 export interface LeaderboardEntry {
   userId: string;
   username: string;
   totalMs: number;
 }
-
-const columnByType: Record<TimeType, "presence_ms" | "voice_ms"> = {
-  presence: "presence_ms",
-  voice: "voice_ms",
-};
 
 export class StatsDatabase {
   private db: Database.Database;
@@ -33,42 +28,76 @@ export class StatsDatabase {
         presence_ms INTEGER NOT NULL DEFAULT 0,
         voice_ms    INTEGER NOT NULL DEFAULT 0
       );
+
+      CREATE TABLE IF NOT EXISTS voice_sessions (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     TEXT NOT NULL,
+        username    TEXT NOT NULL,
+        duration_ms INTEGER NOT NULL,
+        ended_at    INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_voice_sessions_ended_at ON voice_sessions(ended_at);
+      CREATE INDEX IF NOT EXISTS idx_voice_sessions_user_id ON voice_sessions(user_id);
     `);
   }
 
-  addTime(userId: string, username: string, type: TimeType, ms: number): void {
+  addVoiceTime(userId: string, username: string, ms: number, endedAt = Date.now()): void {
     if (ms <= 0) return;
 
-    const column = columnByType[type];
-    const presenceMs = type === "presence" ? ms : 0;
-    const voiceMs = type === "voice" ? ms : 0;
+    const insertSession = this.db.prepare(`
+      INSERT INTO voice_sessions (user_id, username, duration_ms, ended_at)
+      VALUES (@userId, @username, @ms, @endedAt)
+    `);
 
-    this.db
-      .prepare(
-        `
-        INSERT INTO user_stats (user_id, username, presence_ms, voice_ms)
-        VALUES (@userId, @username, @presenceMs, @voiceMs)
-        ON CONFLICT(user_id) DO UPDATE SET
-          username = @username,
-          ${column} = ${column} + @ms
-        `,
-      )
-      .run({ userId, username, ms, presenceMs, voiceMs });
+    const upsertStats = this.db.prepare(`
+      INSERT INTO user_stats (user_id, username, presence_ms, voice_ms)
+      VALUES (@userId, @username, 0, @ms)
+      ON CONFLICT(user_id) DO UPDATE SET
+        username = @username,
+        voice_ms = voice_ms + @ms
+    `);
+
+    const save = this.db.transaction(() => {
+      insertSession.run({ userId, username, ms, endedAt });
+      upsertStats.run({ userId, username, ms });
+    });
+
+    save();
   }
 
-  getLeaderboard(type: TimeType, limit = 10): LeaderboardEntry[] {
-    const column = columnByType[type];
+  getVoiceLeaderboard(period: Period, limit = 10): LeaderboardEntry[] {
+    const since = getPeriodStartMs(period);
+    if (since === null) {
+      return this.db
+        .prepare(
+          `
+          SELECT user_id AS userId, username, voice_ms AS totalMs
+          FROM user_stats
+          WHERE voice_ms > 0
+          ORDER BY voice_ms DESC
+          LIMIT ?
+          `,
+        )
+        .all(limit) as LeaderboardEntry[];
+    }
+
     return this.db
       .prepare(
         `
-        SELECT user_id AS userId, username, ${column} AS totalMs
-        FROM user_stats
-        WHERE ${column} > 0
-        ORDER BY ${column} DESC
+        SELECT
+          user_id AS userId,
+          MAX(username) AS username,
+          SUM(duration_ms) AS totalMs
+        FROM voice_sessions
+        WHERE ended_at >= ?
+        GROUP BY user_id
+        HAVING totalMs > 0
+        ORDER BY totalMs DESC
         LIMIT ?
         `,
       )
-      .all(limit) as LeaderboardEntry[];
+      .all(since, limit) as LeaderboardEntry[];
   }
 
   close(): void {

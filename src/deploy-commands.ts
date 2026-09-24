@@ -11,11 +11,21 @@ if (!token || !clientId || !guildId) {
 
 const commands = [
   new SlashCommandBuilder()
-    .setName("leaderboard")
-    .setDescription("Show the online time leaderboard"),
-  new SlashCommandBuilder()
     .setName("voice-leaderboard")
-    .setDescription("Show the voice activity leaderboard"),
+    .setDescription("Show the voice activity leaderboard")
+    .addStringOption((option) =>
+      option
+        .setName("period")
+        .setDescription("Time period for the leaderboard")
+        .setRequired(false)
+        .addChoices(
+          { name: "Today", value: "day" },
+          { name: "This Week", value: "week" },
+          { name: "This Month", value: "month" },
+          { name: "Year to Date", value: "ytd" },
+          { name: "All Time", value: "all" },
+        ),
+    ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -24,4 +34,4 @@ await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
   body: commands,
 });
 
-console.log(`Registered ${commands.length} guild commands.`);
+console.log(`Registered ${commands.length} guild command.`);

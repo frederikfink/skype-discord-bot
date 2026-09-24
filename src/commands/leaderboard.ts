@@ -1,16 +1,14 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import type { StatsDatabase, TimeType } from "../db/index.js";
+import type { StatsDatabase } from "../db/index.js";
 import { formatDuration } from "../utils/formatDuration.js";
+import { parsePeriod, periodLabels, type Period } from "../utils/periods.js";
 
-const titles: Record<TimeType, string> = {
-  presence: "🏆 Online Time Leaderboard",
-  voice: "🎙 Voice Activity Leaderboard",
-};
+function buildVoiceLeaderboardMessage(db: StatsDatabase, period: Period): string {
+  const entries = db.getVoiceLeaderboard(period, 10);
+  const title = `🎙 Voice Activity Leaderboard — ${periodLabels[period]}`;
 
-function buildLeaderboardMessage(db: StatsDatabase, type: TimeType): string {
-  const entries = db.getLeaderboard(type, 10);
   if (entries.length === 0) {
-    return `${titles[type]}\n\nNo data yet.`;
+    return `${title}\n\nNo data yet.`;
   }
 
   const lines = entries.map((entry, index) => {
@@ -19,13 +17,13 @@ function buildLeaderboardMessage(db: StatsDatabase, type: TimeType): string {
     return `${rank}. ${entry.username}    ${time}`;
   });
 
-  return `${titles[type]}\n\n${lines.join("\n")}`;
+  return `${title}\n\n${lines.join("\n")}`;
 }
 
-export async function handleLeaderboardCommand(
+export async function handleVoiceLeaderboardCommand(
   interaction: ChatInputCommandInteraction,
   db: StatsDatabase,
-  type: TimeType,
 ): Promise<void> {
-  await interaction.reply(buildLeaderboardMessage(db, type));
+  const period = parsePeriod(interaction.options.getString("period"));
+  await interaction.reply(buildVoiceLeaderboardMessage(db, period));
 }

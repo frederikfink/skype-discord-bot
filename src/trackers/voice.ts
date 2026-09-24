@@ -40,7 +40,7 @@ export class VoiceTracker {
     if (!session) return;
 
     const duration = Date.now() - session.since;
-    this.db.addTime(userId, username, "voice", duration);
+    this.db.addVoiceTime(userId, username, duration);
     this.sessions.delete(userId);
   }
 
@@ -55,7 +55,7 @@ export class VoiceTracker {
   flushAll(): void {
     const now = Date.now();
     for (const [userId, session] of this.sessions) {
-      this.db.addTime(userId, session.username, "voice", now - session.since);
+      this.db.addVoiceTime(userId, session.username, now - session.since);
     }
     this.sessions.clear();
   }
