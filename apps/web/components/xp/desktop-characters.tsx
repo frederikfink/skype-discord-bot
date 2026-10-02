@@ -56,6 +56,7 @@ function flattenPresence(payload: VoicePresencePayload | null): PlacedCharacter[
 
 export function DesktopCharacters() {
   const [presence, setPresence] = useState<VoicePresencePayload | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +66,10 @@ export function DesktopCharacters() {
         const res = await fetch("/api/voice-presence", { cache: "no-store" });
         if (!res.ok) return;
         const data = (await res.json()) as VoicePresencePayload;
-        if (!cancelled) setPresence(data);
+        if (!cancelled) {
+          setPresence(data);
+          setLoaded(true);
+        }
       } catch {
         /* ignore — desktop still usable without live characters */
       }
@@ -81,7 +85,15 @@ export function DesktopCharacters() {
 
   const characters = useMemo(() => flattenPresence(presence), [presence]);
 
-  if (characters.length === 0) return null;
+  if (characters.length === 0) {
+    if (!loaded) return null;
+    return (
+      <p className="xp-desktop-characters-hint">
+        No live voice on the lawn — run the bot on this database, or deploy bot + web on Railway
+        sharing the volume.
+      </p>
+    );
+  }
 
   return (
     <div className="xp-desktop-characters" aria-hidden>

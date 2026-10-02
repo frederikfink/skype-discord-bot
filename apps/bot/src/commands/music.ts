@@ -1,6 +1,7 @@
 import { formatTrackDuration } from "@repo/db";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
 import type { MusicManager } from "../music/player.js";
+import { formatPlayError } from "../music/play-dl-setup.js";
 import { resolveQuery } from "../music/resolve.js";
 
 function requireVoiceChannel(interaction: ChatInputCommandInteraction) {
@@ -34,8 +35,7 @@ export async function handlePlayCommand(
 
     await interaction.editReply(label);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not play that track.";
-    await interaction.editReply(message);
+    await interaction.editReply(formatPlayError(error));
   }
 }
 

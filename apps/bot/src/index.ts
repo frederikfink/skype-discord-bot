@@ -9,6 +9,7 @@ import {
   handleStopCommand,
 } from "./commands/music.js";
 import { resolveDatabasePath } from "./loadEnv.js";
+import { setupPlayDl } from "./music/play-dl-setup.js";
 import { MusicManager } from "./music/player.js";
 import { syncVoicePresence } from "./sync/voice-presence.js";
 import { VoiceTracker } from "./trackers/voice.js";
@@ -43,7 +44,8 @@ client.once("ready", async () => {
   voiceTracker.seedActiveMembers(members.values());
   syncVoicePresence(db, guild);
 
-  console.log(`Seeded active voice sessions for guild ${guild.name}`);
+  const inVoice = db.getVoicePresence().rooms.reduce((n, room) => n + room.members.length, 0);
+  console.log(`Seeded active voice sessions for guild ${guild.name} (${inVoice} in voice)`);
 });
 
 client.on("voiceStateUpdate", (oldState, newState) => {
@@ -95,4 +97,5 @@ function shutdown(): void {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+await setupPlayDl();
 await client.login(token);
