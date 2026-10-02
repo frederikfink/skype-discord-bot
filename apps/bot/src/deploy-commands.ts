@@ -1,5 +1,5 @@
-import "dotenv/config";
 import { REST, Routes, SlashCommandBuilder } from "discord.js";
+import "./loadEnv.js";
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;
@@ -26,6 +26,16 @@ const commands = [
           { name: "All Time", value: "all" },
         ),
     ),
+  new SlashCommandBuilder()
+    .setName("play")
+    .setDescription("Play a YouTube or SoundCloud URL, or search YouTube")
+    .addStringOption((option) =>
+      option.setName("query").setDescription("URL or search terms").setRequired(true),
+    ),
+  new SlashCommandBuilder().setName("skip").setDescription("Skip the current track"),
+  new SlashCommandBuilder().setName("stop").setDescription("Stop playback and clear the queue"),
+  new SlashCommandBuilder().setName("queue").setDescription("Show the music queue"),
+  new SlashCommandBuilder().setName("nowplaying").setDescription("Show the current track"),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -34,4 +44,4 @@ await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
   body: commands,
 });
 
-console.log(`Registered ${commands.length} guild command.`);
+console.log(`Registered ${commands.length} guild commands.`);

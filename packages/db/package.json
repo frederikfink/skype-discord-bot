@@ -1,0 +1,35 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./periods": {
+      "types": "./dist/periods.d.ts",
+      "default": "./dist/periods.js"
+    },
+    "./formatDuration": {
+      "types": "./dist/formatDuration.d.ts",
+      "default": "./dist/formatDuration.js"
+    },
+    "./radio": {
+      "types": "./dist/radio.d.ts",
+      "default": "./dist/radio.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "typescript": "^5.8.2"
+  }
+}

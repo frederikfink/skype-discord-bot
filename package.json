@@ -1,26 +1,20 @@
 {
-  "name": "discord-online-tracker",
+  "name": "skype-bot",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts",
-    "deploy-commands": "tsx src/deploy-commands.ts"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.8.1",
-    "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:bot": "turbo dev --filter=@repo/bot",
+    "dev:web": "turbo dev --filter=@repo/web",
+    "deploy-commands": "turbo deploy-commands --filter=@repo/bot",
+    "db:sync-prod": "bash scripts/sync-prod-db.sh"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
-    "@types/node": "^22.13.10",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "turbo": "^2.5.4"
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "packageManager": "pnpm@10.12.1"
 }

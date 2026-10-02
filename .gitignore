@@ -1,4 +1,8 @@
 node_modules/
 dist/
+.turbo/
 data/
 .env
+
+apps/web/.next/
+packages/db/dist/

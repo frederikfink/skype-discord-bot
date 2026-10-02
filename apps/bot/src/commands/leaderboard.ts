@@ -1,7 +1,6 @@
+import type { StatsDatabase, Period } from "@repo/db";
+import { formatDuration, parsePeriod, periodLabels } from "@repo/db";
 import type { ChatInputCommandInteraction } from "discord.js";
-import type { StatsDatabase } from "../db/index.js";
-import { formatDuration } from "../utils/formatDuration.js";
-import { parsePeriod, periodLabels, type Period } from "../utils/periods.js";
 
 function buildVoiceLeaderboardMessage(db: StatsDatabase, period: Period): string {
   const entries = db.getVoiceLeaderboard(period, 10);

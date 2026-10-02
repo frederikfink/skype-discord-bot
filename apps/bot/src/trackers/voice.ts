@@ -1,5 +1,5 @@
+import type { StatsDatabase } from "@repo/db";
 import type { GuildMember, VoiceState } from "discord.js";
-import type { StatsDatabase } from "../db/index.js";
 
 export class VoiceTracker {
   private sessions = new Map<string, { since: number; username: string }>();
