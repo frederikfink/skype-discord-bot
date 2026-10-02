@@ -13,6 +13,7 @@ export { formatDuration } from "./formatDuration.js";
 export {
   emptyRadioState,
   formatTrackDuration,
+  radioElapsedMs,
   type RadioStatePayload,
   type RadioTrack,
 } from "./radio.js";

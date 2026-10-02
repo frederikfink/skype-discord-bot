@@ -32,6 +32,8 @@ const commands = [
     .addStringOption((option) =>
       option.setName("query").setDescription("URL or search terms").setRequired(true),
     ),
+  new SlashCommandBuilder().setName("pause").setDescription("Pause the current track"),
+  new SlashCommandBuilder().setName("resume").setDescription("Resume playback"),
   new SlashCommandBuilder().setName("skip").setDescription("Skip the current track"),
   new SlashCommandBuilder().setName("stop").setDescription("Stop playback and clear the queue"),
   new SlashCommandBuilder().setName("queue").setDescription("Show the music queue"),

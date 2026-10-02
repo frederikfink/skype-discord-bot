@@ -3,8 +3,10 @@ import { Client, GatewayIntentBits, Partials } from "discord.js";
 import { handleVoiceLeaderboardCommand } from "./commands/leaderboard.js";
 import {
   handleNowPlayingCommand,
+  handlePauseCommand,
   handlePlayCommand,
   handleQueueCommand,
+  handleResumeCommand,
   handleSkipCommand,
   handleStopCommand,
 } from "./commands/music.js";
@@ -24,9 +26,8 @@ if (!token || !guildId) {
 }
 
 const db = new StatsDatabase(databasePath);
-const radioServer = startRadioServer(db);
-const voiceTracker = new VoiceTracker(db);
 const musicManager = new MusicManager(db);
+const voiceTracker = new VoiceTracker(db);
 
 const client = new Client({
   intents: [
@@ -35,6 +36,13 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
   ],
   partials: [Partials.GuildMember],
+});
+
+const radioServer = startRadioServer({
+  db,
+  music: musicManager,
+  guildId,
+  getClient: () => (client.isReady() ? client : null),
 });
 
 client.once("ready", async () => {
@@ -67,6 +75,14 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.commandName === "play") {
     await handlePlayCommand(interaction, musicManager);
+    return;
+  }
+  if (interaction.commandName === "pause") {
+    await handlePauseCommand(interaction, musicManager);
+    return;
+  }
+  if (interaction.commandName === "resume") {
+    await handleResumeCommand(interaction, musicManager);
     return;
   }
   if (interaction.commandName === "skip") {

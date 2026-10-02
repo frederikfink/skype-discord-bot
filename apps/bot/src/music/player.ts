@@ -9,7 +9,9 @@ import {
   type AudioPlayer,
   type VoiceConnection,
 } from "@discordjs/voice";
-import type { VoiceBasedChannel } from "discord.js";
+import type { Client, VoiceBasedChannel } from "discord.js";
+import { resolvePlayableUrl } from "./resolve.js";
+import { resolveMusicVoiceChannel } from "./voice-channel.js";
 import play from "play-dl";
 import { syncRadioState } from "./radio-sync.js";
 import type { QueueTrack } from "./types.js";
@@ -20,7 +22,9 @@ export class GuildMusicPlayer {
   private connection: VoiceConnection | null = null;
   private readonly player: AudioPlayer;
   private startedAt: number | null = null;
+  private positionMs = 0;
   private playing = false;
+  private paused = false;
 
   constructor(private readonly db: StatsDatabase) {
     this.player = createAudioPlayer();
@@ -45,6 +49,14 @@ export class GuildMusicPlayer {
     return this.playing;
   }
 
+  isPaused(): boolean {
+    return this.paused;
+  }
+
+  getVoiceChannelId(): string | null {
+    return this.connection?.joinConfig.channelId ?? null;
+  }
+
   async enqueue(tracks: QueueTrack[], channel: VoiceBasedChannel): Promise<void> {
     await this.ensureConnection(channel);
     this.queue.push(...tracks);
@@ -53,6 +65,33 @@ export class GuildMusicPlayer {
     if (!this.current && this.player.state.status === AudioPlayerStatus.Idle) {
       await this.playNext();
     }
+  }
+
+  pause(): boolean {
+    if (!this.current || this.paused) {
+      return false;
+    }
+    if (this.startedAt !== null) {
+      this.positionMs += Date.now() - this.startedAt;
+    }
+    this.startedAt = null;
+    this.playing = false;
+    this.paused = true;
+    this.player.pause();
+    this.publishRadio();
+    return true;
+  }
+
+  resume(): boolean {
+    if (!this.current || !this.paused) {
+      return false;
+    }
+    this.startedAt = Date.now();
+    this.playing = true;
+    this.paused = false;
+    this.player.unpause();
+    this.publishRadio();
+    return true;
   }
 
   skip(): boolean {
@@ -67,7 +106,9 @@ export class GuildMusicPlayer {
     this.queue = [];
     this.current = null;
     this.startedAt = null;
+    this.positionMs = 0;
     this.playing = false;
+    this.paused = false;
     this.player.stop(true);
     this.disconnect();
     this.publishRadio();
@@ -107,7 +148,9 @@ export class GuildMusicPlayer {
   private async onIdle(): Promise<void> {
     this.current = null;
     this.startedAt = null;
+    this.positionMs = 0;
     this.playing = false;
+    this.paused = false;
     await this.playNext();
   }
 
@@ -125,15 +168,19 @@ export class GuildMusicPlayer {
         inputType: streamed.type,
       });
       this.current = next;
+      this.positionMs = 0;
       this.startedAt = Date.now();
       this.playing = true;
+      this.paused = false;
       this.publishRadio();
       this.player.play(resource);
     } catch (error) {
       console.error(`Failed to stream ${next.url}:`, error);
       this.current = null;
       this.startedAt = null;
+      this.positionMs = 0;
       this.playing = false;
+      this.paused = false;
       await this.playNext();
     }
   }
@@ -149,7 +196,9 @@ export class GuildMusicPlayer {
       current: this.current,
       queue: this.queue,
       isPlaying: this.playing,
+      isPaused: this.paused,
       startedAt: this.startedAt,
+      positionMs: this.positionMs,
     });
   }
 }
@@ -166,5 +215,13 @@ export class MusicManager {
       this.players.set(guildId, player);
     }
     return player;
+  }
+
+  async enqueueUrl(guildId: string, client: Client, url: string): Promise<QueueTrack[]> {
+    const tracks = await resolvePlayableUrl(url);
+    const player = this.get(guildId);
+    const channel = await resolveMusicVoiceChannel(client, player);
+    await player.enqueue(tracks, channel);
+    return tracks;
   }
 }

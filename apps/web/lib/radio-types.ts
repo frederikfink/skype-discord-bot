@@ -10,11 +10,22 @@ export type RadioStatePayload = {
   current: RadioTrack | null;
   queue: RadioTrack[];
   isPlaying: boolean;
+  isPaused: boolean;
   startedAt: number | null;
+  positionMs: number;
   updatedAt: number;
   /** True when this SQLite file has ever received bot radio_state writes */
   syncedWithBot?: boolean;
 };
+
+export function radioElapsedMs(
+  state: Pick<RadioStatePayload, "isPlaying" | "startedAt" | "positionMs">,
+): number {
+  if (state.isPlaying && state.startedAt !== null) {
+    return state.positionMs + Math.max(0, Date.now() - state.startedAt);
+  }
+  return state.positionMs;
+}
 
 export function formatTrackDuration(seconds: number | null): string {
   if (seconds === null || !Number.isFinite(seconds) || seconds < 0) {

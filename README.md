@@ -38,12 +38,14 @@ The Discord bot can play **YouTube** and **SoundCloud** links (or YouTube search
 | Command | Description |
 |---------|-------------|
 | `/play query:` | URL or search; joins your voice channel |
+| `/pause` | Pause the current track |
+| `/resume` | Resume after pause |
 | `/skip` | Skip current track |
 | `/stop` | Stop and clear queue |
 | `/queue` | Show upcoming tracks |
 | `/nowplaying` | Current track |
 
-The XP **Winamp** window polls `GET /api/radio`. Controls are display-only — use Discord commands to DJ.
+The XP **Winamp** window polls `GET /api/radio`. **Play (▶)** and **Pause (⏸)** call `POST /api/radio/control` when `BOT_RADIO_URL` is set (proxied to the bot’s `/radio/pause` and `/radio/resume`). **ML** opens a **SoundCloud browser**: search via `GET /api/radio/search`, queue tracks with `POST /api/radio/play`. The bot needs a voice channel — reuse the channel from a recent `/play`, or set **`MUSIC_VOICE_CHANNEL_ID`** on Railway. Skip/stop remain Discord-only. Set **`BOT_RADIO_SECRET`** on both bot and web if the bot URL is public.
 
 **Bot on Railway, web on localhost or Vercel (recommended):** the bot serves `GET /radio` over HTTP (same `PORT` Railway assigns). Point the web app at it:
 

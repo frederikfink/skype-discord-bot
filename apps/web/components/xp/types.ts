@@ -98,8 +98,8 @@ export const DEFAULT_WINDOWS: Record<AppId, Omit<WindowRecord, "appId">> = {
     minimized: false,
     x: 520,
     y: 48,
-    width: 275,
-    height: 340,
+    width: 300,
+    height: 480,
     maximized: false,
   },
   cocio: {

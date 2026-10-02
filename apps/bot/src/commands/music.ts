@@ -39,6 +39,36 @@ export async function handlePlayCommand(
   }
 }
 
+export async function handlePauseCommand(
+  interaction: ChatInputCommandInteraction,
+  music: MusicManager,
+): Promise<void> {
+  const player = music.get(interaction.guildId!);
+  if (!player.pause()) {
+    await interaction.reply({
+      content: "Nothing to pause (not playing or already paused).",
+      ephemeral: true,
+    });
+    return;
+  }
+  await interaction.reply({ content: "Paused.", ephemeral: true });
+}
+
+export async function handleResumeCommand(
+  interaction: ChatInputCommandInteraction,
+  music: MusicManager,
+): Promise<void> {
+  const player = music.get(interaction.guildId!);
+  if (!player.resume()) {
+    await interaction.reply({
+      content: "Nothing to resume.",
+      ephemeral: true,
+    });
+    return;
+  }
+  await interaction.reply({ content: "Resumed.", ephemeral: true });
+}
+
 export async function handleSkipCommand(
   interaction: ChatInputCommandInteraction,
   music: MusicManager,

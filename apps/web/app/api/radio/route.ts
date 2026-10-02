@@ -11,7 +11,7 @@ function readRadioFromSqlite() {
   const syncedWithBot = db.hasRadioStateRow();
   const state = db.getRadioState();
 
-  if (!state.current && state.queue.length === 0 && !state.isPlaying) {
+  if (!state.current && state.queue.length === 0 && !state.isPlaying && !state.isPaused) {
     return { ...emptyRadioState(), syncedWithBot };
   }
 

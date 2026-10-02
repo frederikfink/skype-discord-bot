@@ -80,6 +80,28 @@ async function resolveSearch(query: string): Promise<QueueTrack[]> {
   return resolveUrl(hit.url);
 }
 
+/** Direct track/playlist URL only (no text search). */
+export async function resolvePlayableUrl(url: string): Promise<QueueTrack[]> {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    throw new Error("URL is required.");
+  }
+
+  if (isSoundCloudQuery(trimmed)) {
+    await ensureSoundCloudReady();
+  }
+
+  const kind = await play.validate(trimmed);
+  if (kind === "search") {
+    throw new Error("Use a direct track URL, not a search query.");
+  }
+  if (kind === false) {
+    throw new Error("Unsupported URL. Use a YouTube or SoundCloud link.");
+  }
+
+  return resolveUrl(trimmed);
+}
+
 export async function resolveQuery(query: string): Promise<QueueTrack[]> {
   const trimmed = query.trim();
   if (!trimmed) {
