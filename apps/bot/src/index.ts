@@ -1,4 +1,4 @@
-import { StatsDatabase } from "@repo/db";
+import { emptyVoicePresence, StatsDatabase } from "@repo/db";
 import { Client, GatewayIntentBits, Partials } from "discord.js";
 import { handleVoiceLeaderboardCommand } from "./commands/leaderboard.js";
 import {
@@ -10,6 +10,7 @@ import {
 } from "./commands/music.js";
 import { resolveDatabasePath } from "./loadEnv.js";
 import { MusicManager } from "./music/player.js";
+import { syncVoicePresence } from "./sync/voice-presence.js";
 import { VoiceTracker } from "./trackers/voice.js";
 
 const token = process.env.DISCORD_TOKEN;
@@ -40,6 +41,7 @@ client.once("ready", async () => {
   const members = await guild.members.fetch();
 
   voiceTracker.seedActiveMembers(members.values());
+  syncVoicePresence(db, guild);
 
   console.log(`Seeded active voice sessions for guild ${guild.name}`);
 });
@@ -47,6 +49,8 @@ client.once("ready", async () => {
 client.on("voiceStateUpdate", (oldState, newState) => {
   if (oldState.guild.id !== guildId && newState.guild.id !== guildId) return;
   voiceTracker.handleUpdate(oldState, newState);
+  const guild = newState.guild.id === guildId ? newState.guild : oldState.guild;
+  syncVoicePresence(db, guild);
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -82,6 +86,7 @@ client.on("interactionCreate", async (interaction) => {
 function shutdown(): void {
   console.log("Shutting down, flushing active sessions...");
   voiceTracker.flushAll();
+  db.setVoicePresence(emptyVoicePresence());
   db.close();
   client.destroy();
   process.exit(0);

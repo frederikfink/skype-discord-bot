@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import type { Period } from "./periods.js";
 import { getPeriodStartMs } from "./periods.js";
 import { emptyRadioState, type RadioStatePayload } from "./radio.js";
+import { emptyVoicePresence, type VoicePresencePayload } from "./voice-presence.js";
 
 export interface LeaderboardEntry {
   userId: string;
@@ -53,6 +54,12 @@ export class StatsDatabase {
         payload     TEXT NOT NULL,
         updated_at  INTEGER NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS voice_presence (
+        id          INTEGER PRIMARY KEY CHECK (id = 1),
+        payload     TEXT NOT NULL,
+        updated_at  INTEGER NOT NULL
+      );
     `);
   }
 
@@ -66,6 +73,34 @@ export class StatsDatabase {
     } catch {
       return emptyRadioState();
     }
+  }
+
+  getVoicePresence(): VoicePresencePayload {
+    const row = this.db
+      .prepare("SELECT payload FROM voice_presence WHERE id = 1")
+      .get() as { payload: string } | undefined;
+    if (!row) return emptyVoicePresence();
+    try {
+      return JSON.parse(row.payload) as VoicePresencePayload;
+    } catch {
+      return emptyVoicePresence();
+    }
+  }
+
+  setVoicePresence(payload: VoicePresencePayload): void {
+    const updatedAt = Date.now();
+    const body = JSON.stringify({ ...payload, updatedAt });
+    this.db
+      .prepare(
+        `
+        INSERT INTO voice_presence (id, payload, updated_at)
+        VALUES (1, @payload, @updatedAt)
+        ON CONFLICT(id) DO UPDATE SET
+          payload = @payload,
+          updated_at = @updatedAt
+      `,
+      )
+      .run({ payload: body, updatedAt });
   }
 
   setRadioState(payload: RadioStatePayload): void {

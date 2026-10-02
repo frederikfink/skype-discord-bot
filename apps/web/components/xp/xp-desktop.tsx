@@ -3,6 +3,7 @@
 import type { LeaderboardEntry } from "@/lib/stats-types";
 import type { Period } from "@repo/db/periods";
 import { useCallback, useRef, useState } from "react";
+import { DesktopCharacters } from "./desktop-characters";
 import { DebugApp, DebugStatus } from "./debug-app";
 import { isMemeApp, pickRandomMeme } from "./meme-images";
 import { MemeViewerApp, MemeViewerStatus } from "./meme-viewer-app";
@@ -190,6 +191,8 @@ export function XpDesktop({ period, entries, debugPayload }: XpDesktopProps) {
         className="xp-desktop-surface"
         onMouseDown={onDesktopBackgroundClick}
       >
+        <DesktopCharacters />
+
         {APP_IDS.map((appId) => {
           const layout = DESKTOP_ICON_LAYOUT[appId];
           const meta = APP_META[appId];

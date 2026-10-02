@@ -7,7 +7,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --frozen-lockfile=false \
-  && pnpm approve-builds --all --yes \
   && pnpm rebuild better-sqlite3 esbuild
 
 FROM deps AS build
@@ -25,7 +24,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/db/package.json ./packages/db/
 RUN pnpm install --prod --frozen-lockfile=false \
-  && pnpm approve-builds --all --yes \
   && pnpm rebuild better-sqlite3
 COPY --from=build /app/packages/db/dist ./packages/db/dist
 COPY --from=build /app/apps/web/.next ./apps/web/.next

@@ -19,6 +19,10 @@
     "./radio": {
       "types": "./dist/radio.d.ts",
       "default": "./dist/radio.js"
+    },
+    "./voice-presence": {
+      "types": "./dist/voice-presence.d.ts",
+      "default": "./dist/voice-presence.js"
     }
   },
   "scripts": {

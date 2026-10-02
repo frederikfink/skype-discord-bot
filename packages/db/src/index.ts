@@ -16,3 +16,9 @@ export {
   type RadioStatePayload,
   type RadioTrack,
 } from "./radio.js";
+export {
+  emptyVoicePresence,
+  type VoicePresenceMember,
+  type VoicePresencePayload,
+  type VoicePresenceRoom,
+} from "./voice-presence.js";
