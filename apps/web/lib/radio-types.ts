@@ -12,6 +12,8 @@ export type RadioStatePayload = {
   isPlaying: boolean;
   startedAt: number | null;
   updatedAt: number;
+  /** True when this SQLite file has ever received bot radio_state writes */
+  syncedWithBot?: boolean;
 };
 
 export function formatTrackDuration(seconds: number | null): string {

@@ -5,6 +5,8 @@ dockerfilePath = "apps/bot/Dockerfile"
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 
 [[mounts]]
 source = "bot-data"

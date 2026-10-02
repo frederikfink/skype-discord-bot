@@ -43,13 +43,24 @@ The Discord bot can play **YouTube** and **SoundCloud** links (or YouTube search
 | `/queue` | Show upcoming tracks |
 | `/nowplaying` | Current track |
 
-The XP **Winamp** window on the dashboard polls `GET /api/radio`, which reads the same SQLite `radio_state` row the bot updates while playing. Controls on the web UI are display-only — use Discord commands to DJ.
+The XP **Winamp** window polls `GET /api/radio`. Controls are display-only — use Discord commands to DJ.
+
+**Bot on Railway, web on localhost or Vercel (recommended):** the bot serves `GET /radio` over HTTP (same `PORT` Railway assigns). Point the web app at it:
+
+1. Railway → **bot** service → **Settings → Networking → Generate domain** (e.g. `https://skype-bot-production.up.railway.app`).
+2. Redeploy the bot after pulling the HTTP radio changes.
+3. In repo root `.env` (local) or **Vercel env** for `apps/web`:
+   - `BOT_RADIO_URL=https://your-bot.up.railway.app`
+   - Optional: `BOT_RADIO_SECRET=` (same value on the bot service if you want auth)
+4. Restart `pnpm dev:web` or redeploy Vercel. Winamp loads via `/api/radio` → bot `/radio`.
+
+**Bot + web both local (or both on Railway with shared `bot-data` volume):** leave `BOT_RADIO_URL` unset; `/api/radio` reads SQLite `radio_state` from `DATABASE_PATH`.
 
 **Local playback:** Install FFmpeg on your PATH (`brew install ffmpeg` on macOS). Join a voice channel, run `pnpm dev:bot`, then `/play` with a URL.
 
 **YouTube on Railway:** Google often blocks datacenter IPs (`Sign in to confirm you're not a bot`). Options:
 
-1. **SoundCloud** — paste a SoundCloud track URL; usually works without extra setup.
+1. **SoundCloud** — paste a SoundCloud track URL. If you see a `client_id` error, set **`SOUNDCLOUD_CLIENT_ID`** on Railway: open [soundcloud.com](https://soundcloud.com) in DevTools → Network → any `api-v2.soundcloud.com` request → copy the `client_id` query param (or run `node -e "import('play-dl').then(p=>p.default.getFreeClientID().then(console.log))"` locally and paste the value).
 2. **YouTube cookies** — use a **throwaway** Google account (not your main):
    - In Chrome, log into YouTube and open DevTools → **Network** → reload `youtube.com` → pick any request → copy the full **`Cookie`** request header value.
    - Railway → bot service → **Variables** → `YOUTUBE_COOKIES` = that string (one line).

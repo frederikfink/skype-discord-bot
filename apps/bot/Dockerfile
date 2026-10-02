@@ -30,4 +30,5 @@ COPY --from=build /app/packages/db/dist ./packages/db/dist
 COPY --from=build /app/apps/bot/dist ./apps/bot/dist
 RUN mkdir -p /app/data
 WORKDIR /app/apps/bot
+EXPOSE 8080
 CMD ["sh", "-c", "node dist/deploy-commands.js && node dist/index.js"]

@@ -55,8 +55,16 @@ export function WinampApp() {
   const isPlaying = radio?.isPlaying ?? false;
   const isPaused = false;
   const currentTrack = tracks[trackIndex] ?? tracks[0]!;
-  const statusLabel = isPlaying ? "Playing" : "Stopped";
+  const hasLiveTrack = Boolean(radio?.current) || isPlaying;
   const remoteControl = true;
+
+  const playlistHint = fetchError
+    ? "Could not load /api/radio."
+    : !hasLiveTrack && radio?.syncedWithBot === false
+      ? "No radio data. Set BOT_RADIO_URL to your Railway bot URL (see README), or run bot + web against the same bot.db locally."
+      : !hasLiveTrack
+        ? "Nothing playing — use /play in Discord."
+        : "Live queue from the Discord music bot";
 
   useEffect(() => {
     let cancelled = false;
@@ -105,9 +113,9 @@ export function WinampApp() {
 
   const marqueeSuffix = fetchError
     ? "Could not reach /api/radio"
-    : remoteControl
-      ? "Control playback from Discord (/play, /skip, /stop)"
-      : statusLabel;
+    : !hasLiveTrack && radio?.syncedWithBot === false
+      ? "Not linked to prod bot DB — see playlist hint below"
+      : "Control playback from Discord (/play, /skip, /stop)";
 
   return (
     <div className="winamp">
@@ -226,7 +234,7 @@ export function WinampApp() {
               </li>
             ))}
           </ol>
-          <p className="winamp-playlist-hint">Live queue from the Discord music bot</p>
+          <p className="winamp-playlist-hint">{playlistHint}</p>
         </div>
       ) : null}
     </div>

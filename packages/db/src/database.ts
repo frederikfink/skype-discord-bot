@@ -63,6 +63,11 @@ export class StatsDatabase {
     `);
   }
 
+  hasRadioStateRow(): boolean {
+    const row = this.db.prepare("SELECT 1 AS ok FROM radio_state WHERE id = 1").get();
+    return row !== undefined;
+  }
+
   getRadioState(): RadioStatePayload {
     const row = this.db
       .prepare("SELECT payload FROM radio_state WHERE id = 1")

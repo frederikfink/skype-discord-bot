@@ -8,6 +8,7 @@ import {
   handleSkipCommand,
   handleStopCommand,
 } from "./commands/music.js";
+import { startRadioServer } from "./http/radio-server.js";
 import { resolveDatabasePath } from "./loadEnv.js";
 import { setupPlayDl } from "./music/play-dl-setup.js";
 import { MusicManager } from "./music/player.js";
@@ -23,6 +24,7 @@ if (!token || !guildId) {
 }
 
 const db = new StatsDatabase(databasePath);
+const radioServer = startRadioServer(db);
 const voiceTracker = new VoiceTracker(db);
 const musicManager = new MusicManager(db);
 
@@ -89,6 +91,7 @@ function shutdown(): void {
   console.log("Shutting down, flushing active sessions...");
   voiceTracker.flushAll();
   db.setVoicePresence(emptyVoicePresence());
+  radioServer.close();
   db.close();
   client.destroy();
   process.exit(0);

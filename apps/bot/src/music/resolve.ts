@@ -1,5 +1,10 @@
 import play from "play-dl";
+import { ensureSoundCloudReady } from "./play-dl-setup.js";
 import type { QueueTrack } from "./types.js";
+
+function isSoundCloudQuery(query: string): boolean {
+  return /soundcloud\.com/i.test(query);
+}
 
 function trackId(url: string): string {
   return url;
@@ -79,6 +84,10 @@ export async function resolveQuery(query: string): Promise<QueueTrack[]> {
   const trimmed = query.trim();
   if (!trimmed) {
     throw new Error("Please provide a URL or search query.");
+  }
+
+  if (isSoundCloudQuery(trimmed)) {
+    await ensureSoundCloudReady();
   }
 
   const kind = await play.validate(trimmed);
